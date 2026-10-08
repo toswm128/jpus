@@ -4,14 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.minsu.jpus.user.dto.CreateUserRequest;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class UserServiceTest {
 
+  private UserService userService;
+  @BeforeEach
+  void setUp(){
+    userService = new UserService(new UserRepository());
+  }
+
   @Test
   void createUserTest(){
-    UserService userService = new UserService(new UserRepository());
-
     User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
 
     assertEquals(1L,user.getId());
@@ -21,7 +26,6 @@ public class UserServiceTest {
 
   @Test
   void getUsersTest(){
-    UserService userService = new UserService(new UserRepository());
     userService.createUser(new CreateUserRequest("minsu","조조민수"));
     userService.createUser(new CreateUserRequest("wpdnjs","제원"));
 
@@ -36,7 +40,6 @@ public class UserServiceTest {
 
   @Test
   void getUserTest(){
-    UserService userService = new UserService(new UserRepository());
     userService.createUser(new CreateUserRequest("minsu","조조민수"));
     userService.createUser(new CreateUserRequest("wpdnjs","제원"));
 
@@ -48,7 +51,6 @@ public class UserServiceTest {
 
   @Test
   void getUserNotFoundTest(){
-    UserService userService = new UserService(new UserRepository());
     userService.createUser(new CreateUserRequest("minsu","조조민수"));
     userService.createUser(new CreateUserRequest("wpdnjs","제원"));
 

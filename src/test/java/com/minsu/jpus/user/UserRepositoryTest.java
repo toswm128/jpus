@@ -6,14 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.minsu.jpus.user.dto.CreateUserRequest;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class UserRepositoryTest {
+  private UserRepository repository;
+  @BeforeEach
+  void setUp(){
+    repository = new UserRepository();
+  }
 
 
   @Test
   void saveTest(){
-    UserRepository repository = new UserRepository();
     CreateUserRequest request = new CreateUserRequest("minsu","조조민수");
 
     User saved = repository.save(request);
@@ -24,8 +29,6 @@ public class UserRepositoryTest {
 
   @Test
   void findAllTest(){
-    UserRepository repository = new UserRepository();
-
     repository.save(new CreateUserRequest("minsu","조조민수"));
     repository.save(new CreateUserRequest("wpdnjs","제원"));
 
@@ -40,8 +43,6 @@ public class UserRepositoryTest {
 
   @Test
   void findByIdTest(){
-    UserRepository repository = new UserRepository();
-
     repository.save(new CreateUserRequest("minsu","조조민수"));
     repository.save(new CreateUserRequest("wpdnjs","제원"));
 
@@ -54,6 +55,12 @@ public class UserRepositoryTest {
     assertEquals(1L, user.getId());
     assertEquals("minsu", user.getUserName());
     assertEquals("조조민수", user.getNickname());
+  }
+
+  @Test
+  void findByIdEmptyTest(){
+    repository.save(new CreateUserRequest("minsu","조조민수"));
+    repository.save(new CreateUserRequest("wpdnjs","제원"));
 
     assertTrue(repository.findById(3L).isEmpty());
   }
