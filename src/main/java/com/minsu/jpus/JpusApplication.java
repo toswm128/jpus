@@ -10,8 +10,5 @@ public class JpusApplication {
 	public static void main(String[] args) {
 
 		var context = SpringApplication.run(JpusApplication.class, args);
-
-		GreetingService greetingService = context.getBean(GreetingService.class);
-		System.out.println(greetingService.greet("minsu"));
 	}
 }

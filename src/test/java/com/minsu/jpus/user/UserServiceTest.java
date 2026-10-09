@@ -1,0 +1,59 @@
+package com.minsu.jpus.user;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.minsu.jpus.user.dto.CreateUserRequest;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+public class UserServiceTest {
+
+  private UserService userService;
+  @BeforeEach
+  void setUp(){
+    userService = new UserService(new UserRepository());
+  }
+
+  @Test
+  void createUserTest(){
+    User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
+
+    assertEquals(1L,user.getId());
+    assertEquals("minsu",user.getUsername());
+    assertEquals("조조민수",user.getNickname());
+  }
+
+  @Test
+  void getUsersTest(){
+    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
+
+    List<User> users = userService.getUsers();
+
+    assertEquals(2, users.size());
+    assertEquals("minsu", users.getFirst().getUsername());
+    assertEquals("조조민수", users.getFirst().getNickname());
+    assertEquals("wpdnjs", users.get(1).getUsername());
+    assertEquals("제원", users.get(1).getNickname());
+  }
+
+  @Test
+  void getUserTest(){
+    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
+
+    User user = userService.getUser(1L);
+
+    assertEquals(1L, user.getId());
+    assertEquals("minsu", user.getUsername());
+  }
+
+  @Test
+  void getUserNotFoundTest(){
+    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
+
+    assertThrows(UserNotFoundException.class,()->userService.getUser(3L));
+  }
+}
