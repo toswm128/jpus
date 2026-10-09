@@ -23,7 +23,7 @@ public class UserRepositoryTest {
 
     User saved = repository.save(request);
     assertEquals(1L, saved.getId());
-    assertEquals("minsu", saved.getUserName());
+    assertEquals("minsu", saved.getUsername());
     assertEquals("조조민수", saved.getNickname());
   }
 
@@ -35,9 +35,9 @@ public class UserRepositoryTest {
     List<User> users =  repository.findAll();
 
     assertEquals(2, users.size());
-    assertEquals("minsu", users.getFirst().getUserName());
+    assertEquals("minsu", users.getFirst().getUsername());
     assertEquals("조조민수", users.getFirst().getNickname());
-    assertEquals("wpdnjs", users.get(1).getUserName());
+    assertEquals("wpdnjs", users.get(1).getUsername());
     assertEquals("제원", users.get(1).getNickname());
   }
 
@@ -53,7 +53,7 @@ public class UserRepositoryTest {
     User user = result.get();
 
     assertEquals(1L, user.getId());
-    assertEquals("minsu", user.getUserName());
+    assertEquals("minsu", user.getUsername());
     assertEquals("조조민수", user.getNickname());
   }
 

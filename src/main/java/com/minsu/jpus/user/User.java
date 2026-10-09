@@ -13,7 +13,7 @@ public class User
   public Long getId() {
     return id;
   }
-  public String getUserName() {
+  public String getUsername() {
     return userName;
   }
   public String getNickname() {

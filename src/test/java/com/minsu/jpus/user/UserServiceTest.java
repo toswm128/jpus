@@ -20,7 +20,7 @@ public class UserServiceTest {
     User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
 
     assertEquals(1L,user.getId());
-    assertEquals("minsu",user.getUserName());
+    assertEquals("minsu",user.getUsername());
     assertEquals("조조민수",user.getNickname());
   }
 
@@ -32,9 +32,9 @@ public class UserServiceTest {
     List<User> users = userService.getUsers();
 
     assertEquals(2, users.size());
-    assertEquals("minsu", users.getFirst().getUserName());
+    assertEquals("minsu", users.getFirst().getUsername());
     assertEquals("조조민수", users.getFirst().getNickname());
-    assertEquals("wpdnjs", users.get(1).getUserName());
+    assertEquals("wpdnjs", users.get(1).getUsername());
     assertEquals("제원", users.get(1).getNickname());
   }
 
@@ -46,7 +46,7 @@ public class UserServiceTest {
     User user = userService.getUser(1L);
 
     assertEquals(1L, user.getId());
-    assertEquals("minsu", user.getUserName());
+    assertEquals("minsu", user.getUsername());
   }
 
   @Test
