@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.minsu.jpus.global.SecurityConfig;
 import com.minsu.jpus.user.dto.CreateUserRequest;
 import com.minsu.jpus.user.dto.UserResponse;
 import java.sql.Array;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -26,11 +29,14 @@ public class UserServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private PasswordEncoder passwordEncoder;
+
   private UserService userService;
 
   @BeforeEach
   void setUp() {
-    userService = new UserService(userRepository);
+    userService = new UserService(userRepository,passwordEncoder);
   }
 
   @Test
@@ -40,7 +46,12 @@ public class UserServiceTest {
 
     when(userRepository.save(any(User.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
-    UserResponse user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
+
+    when(passwordEncoder.encode("test1234"))
+        .thenReturn("encoded-password");
+
+    UserResponse user = userService.createUser(new CreateUserRequest(
+        "minsu", "test1234","조조민수"));
 
     verify(userRepository).save(any(User.class));
     assertEquals("minsu",user.username());
@@ -53,7 +64,8 @@ public class UserServiceTest {
         .thenReturn(true);
 
     verify(userRepository, never()).save(any(User.class));
-    assertThrows(UserDuplicateException.class,()->userService.createUser(new CreateUserRequest("minsu","조민수")));
+    assertThrows(UserDuplicateException.class,()->userService.createUser(new CreateUserRequest(
+        "minsu","test1234","조조민수")));
   }
 
   @Test
@@ -66,7 +78,8 @@ public class UserServiceTest {
 
   @Test
   void getUserTest(){
-    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(new User("minsu", "조조민수")));
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(new User(
+        "minsu", "test1234","조조민수")));
     userService.getUser(1L);
 
     verify(userRepository).findById(any(Long.class));
@@ -75,6 +88,7 @@ public class UserServiceTest {
   @Test
   void getUserNotFoundTest(){
     when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(null));
+    verify(passwordEncoder, never()).encode(any(String.class));
     assertThrows(UserNotFoundException.class,()->userService.getUser(3L));
   }
 }

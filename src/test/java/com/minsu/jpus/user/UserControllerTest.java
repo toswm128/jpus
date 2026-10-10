@@ -48,7 +48,7 @@ public class UserControllerTest {
 
   @Test
   void getUsersTest() throws Exception {
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("minsu","test1234","조조민수"));
 
     mockMvc.perform(
             get("/users")
@@ -65,7 +65,7 @@ public class UserControllerTest {
 
   @Test
   void getUserTest() throws Exception{
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("minsu","test1234","조조민수"));
 
     mockMvc.perform(
             get("/users/1")

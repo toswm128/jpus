@@ -18,6 +18,8 @@ public class User
   private String username;
   @Column(nullable = false)
   private String nickname;
+  @Column(nullable = false)
+  private String passwordHash;
 
 
   public Long getId() {
@@ -29,12 +31,14 @@ public class User
   public String getNickname() {
     return nickname;
   }
+  public String getPasswordHash() { return passwordHash; }
 
   protected User() {
   }
 
-  public User(String username, String nickname) {
+  public User(String username, String passwordHash,String nickname) {
     this.username=username;
+    this.passwordHash = passwordHash;
     this.nickname=nickname;
   }
 }

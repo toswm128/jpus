@@ -21,7 +21,7 @@ public class UserRepositoryTest {
 
   @Test
   void saveTest(){
-    User request = new User("minsu","조조민수");
+    User request = new User("minsu","test-hash","조조민수");
 
     User user = userRepository.save(request);
     assertNotNull(user.getId());
@@ -32,8 +32,8 @@ public class UserRepositoryTest {
 
   @Test
   void findAllTest(){
-    userRepository.save(new User("minsu","조조민수"));
-    userRepository.save(new User("wpdnjs","제원"));
+    userRepository.save(new User("minsu","test-hash","조조민수"));
+    userRepository.save(new User("wpdnjs","test-hash","제원"));
 
     List<User> users =  userRepository.findAll();
 
@@ -42,8 +42,8 @@ public class UserRepositoryTest {
 
   @Test
   void findByIdTest(){
-    Long userId = userRepository.save(new User("minsu","조조민수")).getId();
-    userRepository.save(new User("wpdnjs","제원"));
+    Long userId = userRepository.save(new User("minsu","test-hash","조조민수")).getId();
+    userRepository.save(new User("wpdnjs","test-hash","제원"));
 
     Optional<User> result =  userRepository.findById(userId);
 
@@ -58,7 +58,7 @@ public class UserRepositoryTest {
 
   @Test
   void findByUsernameTest(){
-    userRepository.save(new User("minsu","조조민수"));
+    userRepository.save(new User("minsu","test-hash","조조민수"));
 
     User user = userRepository.findByUsername("minsu").orElseThrow();
 
@@ -73,7 +73,7 @@ public class UserRepositoryTest {
 
   @Test
   void existsByUsernameTest() {
-    userRepository.save(new User("minsu", "조조민수"));
+    userRepository.save(new User("minsu","test-hash", "조조민수"));
 
     assertTrue(userRepository.existsByUsername("minsu"));
     assertFalse(userRepository.existsByUsername("unknown"));
