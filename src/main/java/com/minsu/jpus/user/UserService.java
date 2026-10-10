@@ -37,4 +37,11 @@ public class UserService {
     return UserResponse.from(user);
 
   }
+
+  public UserResponse getUserByUsername(String username) {
+    User user = userRepository.findByUsername(username).orElseThrow(()->
+        new UserNotFoundException("존재하지 않는 유저입니다. username="+username)
+    );
+    return UserResponse.from(user);
+  }
 }
