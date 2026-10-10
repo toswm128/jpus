@@ -13,7 +13,8 @@ public class UserService {
   }
 
   public User createUser(CreateUserRequest request){
-    return userRepository.save(request);
+    User user = new User(request.username(),request.nickname());
+    return userRepository.save(user);
   }
 
   public List<User> getUsers(){
