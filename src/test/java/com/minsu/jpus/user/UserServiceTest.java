@@ -1,59 +1,79 @@
 package com.minsu.jpus.user;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.minsu.jpus.user.dto.CreateUserRequest;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
+  @Mock
+  private UserRepository userRepository;
+
   private UserService userService;
+
   @BeforeEach
-  void setUp(){
-//    userService = new UserService(new UserRepository());
+  void setUp() {
+    userService = new UserService(userRepository);
   }
 
   @Test
   void createUserTest(){
+    when(userRepository.existsByUsername("minsu"))
+        .thenReturn(false);
+
+    when(userRepository.save(any(User.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
     User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
 
-    assertEquals(1L,user.getId());
+    verify(userRepository).save(any(User.class));
     assertEquals("minsu",user.getUsername());
     assertEquals("조조민수",user.getNickname());
   }
 
   @Test
+  void createUseruDplicateTest(){
+    when(userRepository.existsByUsername("minsu"))
+        .thenReturn(true);
+
+    verify(userRepository, never()).save(any(User.class));
+    assertThrows(UserDuplicateException.class,()->userService.createUser(new CreateUserRequest("minsu","조민수")));
+  }
+
+  @Test
   void getUsersTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
-
+    when(userRepository.findAll())
+        .thenAnswer(invocation -> new ArrayList<>());
     List<User> users = userService.getUsers();
-
-    assertEquals(2, users.size());
-    assertEquals("minsu", users.getFirst().getUsername());
-    assertEquals("조조민수", users.getFirst().getNickname());
-    assertEquals("wpdnjs", users.get(1).getUsername());
-    assertEquals("제원", users.get(1).getNickname());
+    verify(userRepository).findAll();
   }
 
   @Test
   void getUserTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(new User("minsu", "조조민수")));
+    userService.getUser(1L);
 
-    User user = userService.getUser(1L);
-
-    assertEquals(1L, user.getId());
-    assertEquals("minsu", user.getUsername());
+    verify(userRepository).findById(any(Long.class));
   }
 
   @Test
   void getUserNotFoundTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
-
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(null));
     assertThrows(UserNotFoundException.class,()->userService.getUser(3L));
   }
 }

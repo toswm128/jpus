@@ -13,8 +13,12 @@ public class UserService {
   }
 
   public User createUser(CreateUserRequest request){
-    User user = new User(request.username(),request.nickname());
-    return userRepository.save(user);
+    if(userRepository.existsByUsername(request.username())) {
+      throw new UserDuplicateException("이미 존재하는 아이디입니다.");
+    }
+      User user = new User(request.username(), request.nickname());
+      return userRepository.save(user);
+
   }
 
   public List<User> getUsers(){
