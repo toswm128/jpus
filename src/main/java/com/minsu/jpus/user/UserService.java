@@ -1,6 +1,7 @@
 package com.minsu.jpus.user;
 
 import com.minsu.jpus.user.dto.CreateUserRequest;
+import com.minsu.jpus.user.dto.UserResponse;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -12,23 +13,25 @@ public class UserService {
     this.userRepository = userRepository;
   }
 
-  public User createUser(CreateUserRequest request){
+  public UserResponse createUser(CreateUserRequest request){
     if(userRepository.existsByUsername(request.username())) {
       throw new UserDuplicateException("이미 존재하는 아이디입니다.");
     }
       User user = new User(request.username(), request.nickname());
-      return userRepository.save(user);
+      return UserResponse.from(userRepository.save(user));
 
   }
 
-  public List<User> getUsers(){
-    return userRepository.findAll();
+  public List<UserResponse> getUsers(){
+    return userRepository.findAll().stream().map(UserResponse::from).toList();
   }
 
-  public User getUser(Long id){
-
-    return userRepository.findById(id).orElseThrow(()->
-     new UserNotFoundException("존재하지 않는 유저입니다. id="+id)
+  public UserResponse getUser(Long id){
+    User user = userRepository.findById(id).orElseThrow(()->
+        new UserNotFoundException("존재하지 않는 유저입니다. id="+id)
     );
+
+    return UserResponse.from(user);
+
   }
 }

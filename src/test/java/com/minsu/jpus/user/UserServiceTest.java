@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.minsu.jpus.user.dto.CreateUserRequest;
+import com.minsu.jpus.user.dto.UserResponse;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,11 +40,11 @@ public class UserServiceTest {
 
     when(userRepository.save(any(User.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
-    User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    UserResponse user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
 
     verify(userRepository).save(any(User.class));
-    assertEquals("minsu",user.getUsername());
-    assertEquals("조조민수",user.getNickname());
+    assertEquals("minsu",user.username());
+    assertEquals("조조민수",user.nickname());
   }
 
   @Test
@@ -59,7 +60,7 @@ public class UserServiceTest {
   void getUsersTest(){
     when(userRepository.findAll())
         .thenAnswer(invocation -> new ArrayList<>());
-    List<User> users = userService.getUsers();
+    List<UserResponse> users = userService.getUsers();
     verify(userRepository).findAll();
   }
 
