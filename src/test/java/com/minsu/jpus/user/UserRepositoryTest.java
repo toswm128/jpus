@@ -48,11 +48,21 @@ public class UserRepositoryTest {
 
     assertTrue(result.isPresent());
 
-    User user = result.get();
+    User user = result.orElseThrow();
 
     assertNotNull(user.getId());
     assertEquals("minsu", user.getUsername());
     assertEquals("조조민수", user.getNickname());
+  }
+
+  @Test
+  void findByUsernameTest(){
+    userRepository.save(new User("minsu","조조민수"));
+
+    User user = userRepository.findByUsername("minsu").orElseThrow();
+
+    assertNotNull(user.getId());
+    assertEquals("minsu", user.getUsername());
   }
 
   @Test
