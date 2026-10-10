@@ -31,10 +31,25 @@ public class SecurityConfig {
     );
 
     http.csrf(csrf -> csrf
-        .ignoringRequestMatchers("/users")
+        .ignoringRequestMatchers(
+            "/users",
+            "/auth/login",
+            "/auth/logout"
+        )
     );
 
-    http.formLogin(form -> form.permitAll());
+    http.exceptionHandling(exception -> exception
+        .authenticationEntryPoint((request, response, e) ->
+            response.sendError(401)
+        )
+    );
+
+    http.logout(logout -> logout
+        .logoutUrl("/auth/logout")
+        .logoutSuccessHandler((request, response, authentication) ->
+            response.setStatus(200)
+        )
+    );
 
     return http.build();
   }
