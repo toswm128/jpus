@@ -12,7 +12,7 @@ public class UserServiceTest {
   private UserService userService;
   @BeforeEach
   void setUp(){
-    userService = new UserService(new UserRepository());
+//    userService = new UserService(new UserRepository());
   }
 
   @Test
