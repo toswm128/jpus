@@ -3,6 +3,7 @@ package com.minsu.jpus.user;
 import com.minsu.jpus.user.dto.CreateUserRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.annotation.DirtiesContext;
@@ -47,7 +48,7 @@ public class UserControllerTest {
 
   @Test
   void getUsersTest() throws Exception {
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("minsu","test1234","조조민수"));
 
     mockMvc.perform(
             get("/users")
@@ -64,7 +65,7 @@ public class UserControllerTest {
 
   @Test
   void getUserTest() throws Exception{
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    userService.createUser(new CreateUserRequest("minsu","test1234","조조민수"));
 
     mockMvc.perform(
             get("/users/1")

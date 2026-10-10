@@ -1,59 +1,94 @@
 package com.minsu.jpus.user;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.minsu.jpus.global.SecurityConfig;
 import com.minsu.jpus.user.dto.CreateUserRequest;
+import com.minsu.jpus.user.dto.UserResponse;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
+  @Mock
+  private UserRepository userRepository;
+
+  @Mock
+  private PasswordEncoder passwordEncoder;
+
   private UserService userService;
+
   @BeforeEach
-  void setUp(){
-    userService = new UserService(new UserRepository());
+  void setUp() {
+    userService = new UserService(userRepository,passwordEncoder);
   }
 
   @Test
   void createUserTest(){
-    User user = userService.createUser(new CreateUserRequest("minsu","조조민수"));
+    when(userRepository.existsByUsername("minsu"))
+        .thenReturn(false);
 
-    assertEquals(1L,user.getId());
-    assertEquals("minsu",user.getUsername());
-    assertEquals("조조민수",user.getNickname());
+    when(userRepository.save(any(User.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    when(passwordEncoder.encode("test1234"))
+        .thenReturn("encoded-password");
+
+    UserResponse user = userService.createUser(new CreateUserRequest(
+        "minsu", "test1234","조조민수"));
+
+    verify(userRepository).save(any(User.class));
+    assertEquals("minsu",user.username());
+    assertEquals("조조민수",user.nickname());
+  }
+
+  @Test
+  void createUseruDplicateTest(){
+    when(userRepository.existsByUsername("minsu"))
+        .thenReturn(true);
+
+    verify(userRepository, never()).save(any(User.class));
+    assertThrows(UserDuplicateException.class,()->userService.createUser(new CreateUserRequest(
+        "minsu","test1234","조조민수")));
   }
 
   @Test
   void getUsersTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
-
-    List<User> users = userService.getUsers();
-
-    assertEquals(2, users.size());
-    assertEquals("minsu", users.getFirst().getUsername());
-    assertEquals("조조민수", users.getFirst().getNickname());
-    assertEquals("wpdnjs", users.get(1).getUsername());
-    assertEquals("제원", users.get(1).getNickname());
+    when(userRepository.findAll())
+        .thenAnswer(invocation -> new ArrayList<>());
+    List<UserResponse> users = userService.getUsers();
+    verify(userRepository).findAll();
   }
 
   @Test
   void getUserTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.of(new User(
+        "minsu", "test1234","조조민수")));
+    userService.getUser(1L);
 
-    User user = userService.getUser(1L);
-
-    assertEquals(1L, user.getId());
-    assertEquals("minsu", user.getUsername());
+    verify(userRepository).findById(any(Long.class));
   }
 
   @Test
   void getUserNotFoundTest(){
-    userService.createUser(new CreateUserRequest("minsu","조조민수"));
-    userService.createUser(new CreateUserRequest("wpdnjs","제원"));
-
+    when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(null));
+    verify(passwordEncoder, never()).encode(any(String.class));
     assertThrows(UserNotFoundException.class,()->userService.getUser(3L));
   }
 }

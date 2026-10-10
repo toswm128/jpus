@@ -1,5 +1,6 @@
 package com.minsu.jpus.global;
 
+import com.minsu.jpus.user.UserDuplicateException;
 import com.minsu.jpus.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,5 +16,13 @@ public class GlobalExceptionHandler {
   ){
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
   }
+
+  @ExceptionHandler(UserDuplicateException.class)
+  public ResponseEntity<String> handleUserDuplicate(
+      UserDuplicateException e
+  ){
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+  }
+
 
 }

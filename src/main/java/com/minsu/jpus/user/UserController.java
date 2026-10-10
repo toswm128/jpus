@@ -1,6 +1,7 @@
 package com.minsu.jpus.user;
 
 import com.minsu.jpus.user.dto.CreateUserRequest;
+import com.minsu.jpus.user.dto.UserResponse;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,18 +22,18 @@ public class UserController {
   }
 
   @GetMapping
-  public List<User> getUsers(){
+  public List<UserResponse> getUsers(){
     return userService.getUsers();
   }
 
   @GetMapping("/{id}")
-  public User getUser(@PathVariable Long id){
+  public UserResponse getUser(@PathVariable Long id){
     return userService.getUser(id);
   }
 
   @PostMapping
-  public ResponseEntity<User> createUser(@RequestBody CreateUserRequest request){
-    User user = userService.createUser(request);
+  public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request){
+    UserResponse user = userService.createUser(request);
 
     return ResponseEntity
         .status(HttpStatus.CREATED)

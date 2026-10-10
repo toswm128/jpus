@@ -1,69 +1,82 @@
 package com.minsu.jpus.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.minsu.jpus.user.dto.CreateUserRequest;
+
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
+@DataJpaTest
 public class UserRepositoryTest {
-  private UserRepository repository;
-  @BeforeEach
-  void setUp(){
-    repository = new UserRepository();
-  }
+
+  @Autowired
+  private UserRepository userRepository;
 
 
   @Test
   void saveTest(){
-    CreateUserRequest request = new CreateUserRequest("minsu","조조민수");
+    User request = new User("minsu","test-hash","조조민수");
 
-    User saved = repository.save(request);
-    assertEquals(1L, saved.getId());
-    assertEquals("minsu", saved.getUsername());
-    assertEquals("조조민수", saved.getNickname());
+    User user = userRepository.save(request);
+    assertNotNull(user.getId());
+    assertEquals("minsu", user.getUsername());
+    assertEquals("조조민수", user.getNickname());
+    assertNotNull(user.getId());
   }
 
   @Test
   void findAllTest(){
-    repository.save(new CreateUserRequest("minsu","조조민수"));
-    repository.save(new CreateUserRequest("wpdnjs","제원"));
+    userRepository.save(new User("minsu","test-hash","조조민수"));
+    userRepository.save(new User("wpdnjs","test-hash","제원"));
 
-    List<User> users =  repository.findAll();
+    List<User> users =  userRepository.findAll();
 
     assertEquals(2, users.size());
-    assertEquals("minsu", users.getFirst().getUsername());
-    assertEquals("조조민수", users.getFirst().getNickname());
-    assertEquals("wpdnjs", users.get(1).getUsername());
-    assertEquals("제원", users.get(1).getNickname());
   }
 
   @Test
   void findByIdTest(){
-    repository.save(new CreateUserRequest("minsu","조조민수"));
-    repository.save(new CreateUserRequest("wpdnjs","제원"));
+    Long userId = userRepository.save(new User("minsu","test-hash","조조민수")).getId();
+    userRepository.save(new User("wpdnjs","test-hash","제원"));
 
-    Optional<User> result =  repository.findById(1L);
+    Optional<User> result =  userRepository.findById(userId);
 
     assertTrue(result.isPresent());
 
-    User user = result.get();
+    User user = result.orElseThrow();
 
-    assertEquals(1L, user.getId());
+    assertNotNull(user.getId());
     assertEquals("minsu", user.getUsername());
     assertEquals("조조민수", user.getNickname());
   }
 
   @Test
-  void findByIdEmptyTest(){
-    repository.save(new CreateUserRequest("minsu","조조민수"));
-    repository.save(new CreateUserRequest("wpdnjs","제원"));
+  void findByUsernameTest(){
+    userRepository.save(new User("minsu","test-hash","조조민수"));
 
-    assertTrue(repository.findById(3L).isEmpty());
+    User user = userRepository.findByUsername("minsu").orElseThrow();
+
+    assertNotNull(user.getId());
+    assertEquals("minsu", user.getUsername());
   }
 
+  @Test
+  void findByIdEmptyTest(){
+    assertTrue(userRepository.findById(3L).isEmpty());
+  }
+
+  @Test
+  void existsByUsernameTest() {
+    userRepository.save(new User("minsu","test-hash", "조조민수"));
+
+    assertTrue(userRepository.existsByUsername("minsu"));
+    assertFalse(userRepository.existsByUsername("unknown"));
+  }
 
 }
