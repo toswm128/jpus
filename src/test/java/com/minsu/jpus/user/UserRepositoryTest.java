@@ -1,6 +1,7 @@
 package com.minsu.jpus.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -70,5 +71,12 @@ public class UserRepositoryTest {
     assertTrue(userRepository.findById(3L).isEmpty());
   }
 
+  @Test
+  void existsByUsernameTest() {
+    userRepository.save(new User("minsu", "조조민수"));
+
+    assertTrue(userRepository.existsByUsername("minsu"));
+    assertFalse(userRepository.existsByUsername("unknown"));
+  }
 
 }
