@@ -40,6 +40,7 @@ public class SecurityConfig {
             "/users",
             "/auth/login",
             "/persona",
+            "/persona/**",
             "/auth/logout"
         )
     );

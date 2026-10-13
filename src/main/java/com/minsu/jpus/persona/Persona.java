@@ -66,4 +66,13 @@ public class Persona {
   public LocalDateTime getDeletedAt() {
     return deletedAt;
   }
+
+  public void updateProfile(String displayName,String bio){
+    if(displayName != null){
+      this.displayName = displayName;
+    }
+    if(bio!=null){
+      this.bio = bio;
+    }
+  }
 }
