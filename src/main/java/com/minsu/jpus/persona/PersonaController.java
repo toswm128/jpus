@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,5 +60,19 @@ public class PersonaController {
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(persona);
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletePersona(
+      @PathVariable("id") Long personaId,
+      Authentication authentication
+  ){
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    personaService.deletePersona(personaId,userPrincipal.getId());
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
+
   }
 }

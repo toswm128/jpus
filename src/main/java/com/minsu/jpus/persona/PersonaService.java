@@ -51,4 +51,20 @@ public class PersonaService {
     persona.updateProfile(request.displayName(), request.bio());
     return PersonaResponse.from(persona);
   }
+
+  @Transactional
+  public PersonaResponse deletePersona(
+      Long personaId,
+      Long userId
+  ){
+    Persona  persona =
+        personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(personaId,userId).orElseThrow(
+            ()-> new PersonaNotFoundException("존재하지 않는 프로필입니다.")
+        );
+
+    persona.delete();
+
+    return PersonaResponse.from(persona);
+
+  }
 }
