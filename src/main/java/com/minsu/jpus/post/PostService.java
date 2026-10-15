@@ -9,6 +9,7 @@ import com.minsu.jpus.post.dto.PostResponse;
 import com.minsu.jpus.user.User;
 import com.minsu.jpus.user.UserNotFoundException;
 import com.minsu.jpus.user.UserRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,5 +34,14 @@ public class PostService {
     );
 
     return PostResponse.from(postRepository.save(new Post(user,persona,request.content() )));
+  }
+
+  public List<PostResponse> getPosts(){
+    List<PostResponse> posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
+        .stream()
+        .map(PostResponse::from)
+        .toList();
+
+    return posts;
   }
 }
