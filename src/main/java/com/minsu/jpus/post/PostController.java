@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,6 +49,19 @@ public class PostController {
   public PostResponse getPost(@PathVariable("id") Long postId){
 
     return postService.getPost(postId);
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletePost(
+      @PathVariable("id") Long personaId,
+      Authentication authentication
+  ){
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    postService.deletePost(personaId,userPrincipal.getId());
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
 
   }
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -85,4 +86,8 @@ public class Post {
 
   @Column(nullable = true)
   LocalDateTime deletedAt;
+
+  public void delete(){
+    this.deletedAt = LocalDateTime.now();
+  }
 }

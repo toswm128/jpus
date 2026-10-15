@@ -52,4 +52,12 @@ public class PostService {
 
     return PostResponse.from(post);
   }
+
+  public void deletePost(Long postId,Long userId){
+    Post post = postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId,userId)
+        .orElseThrow(()->new PostNotFoundException("post id",postId.toString()));
+
+    post.delete();
+    postRepository.save(post);
+  }
 }
