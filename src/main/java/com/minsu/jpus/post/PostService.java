@@ -44,4 +44,12 @@ public class PostService {
 
     return posts;
   }
+
+  public PostResponse getPost(Long postId){
+    Post post = postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
+        () -> new PostNotFoundException("post id",postId.toString())
+    );
+
+    return PostResponse.from(post);
+  }
 }
