@@ -4,11 +4,15 @@ package com.minsu.jpus.post;
 import com.minsu.jpus.persona.Persona;
 import com.minsu.jpus.persona.PersonaNotFoundException;
 import com.minsu.jpus.persona.PersonaRepository;
+import com.minsu.jpus.persona.dto.PersonaResponse;
+import com.minsu.jpus.persona.dto.UpdatePersonaRequest;
 import com.minsu.jpus.post.dto.CreatePostRequest;
 import com.minsu.jpus.post.dto.PostResponse;
+import com.minsu.jpus.post.dto.UpdatePostRequest;
 import com.minsu.jpus.user.User;
 import com.minsu.jpus.user.UserNotFoundException;
 import com.minsu.jpus.user.UserRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -59,5 +63,20 @@ public class PostService {
 
     post.delete();
     postRepository.save(post);
+  }
+
+  @Transactional
+  public PostResponse patchPost(
+      Long postId,
+      Long userId,
+      UpdatePostRequest request
+  ) {
+    Post post =
+        postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId, userId).orElseThrow(
+            () -> new PostNotFoundException("persona id", postId.toString())
+        );
+
+    post.updateContent(request.content());
+    return PostResponse.from(post);
   }
 }

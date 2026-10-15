@@ -90,4 +90,7 @@ public class Post {
   public void delete(){
     this.deletedAt = LocalDateTime.now();
   }
+  public void updateContent(String content){
+    this.content = content;
+  }
 }
