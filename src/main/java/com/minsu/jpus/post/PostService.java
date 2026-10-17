@@ -33,7 +33,7 @@ public class PostService {
     User user  = userRepository.findById(userId).orElseThrow(
         ()->new UserNotFoundException("user id",userId.toString())
     );
-    Persona persona = personaRepository.findById(request.personaId()).orElseThrow(
+    Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),userId).orElseThrow(
         ()-> new PersonaNotFoundException("persona id",request.personaId().toString())
     );
 
@@ -57,12 +57,12 @@ public class PostService {
     return PostResponse.from(post);
   }
 
+  @Transactional
   public void deletePost(Long postId,Long userId){
     Post post = postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId,userId)
         .orElseThrow(()->new PostNotFoundException("post id",postId.toString()));
 
     post.delete();
-    postRepository.save(post);
   }
 
   @Transactional
@@ -73,7 +73,7 @@ public class PostService {
   ) {
     Post post =
         postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId, userId).orElseThrow(
-            () -> new PostNotFoundException("persona id", postId.toString())
+            () -> new PostNotFoundException("post id", postId.toString())
         );
 
     post.updateContent(request.content());
