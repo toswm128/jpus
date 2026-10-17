@@ -27,7 +27,7 @@ public class PostController {
   }
 
   @PostMapping
-  public ResponseEntity<PostResponse> createtPost(
+  public ResponseEntity<PostResponse> createPost(
       @RequestBody CreatePostRequest request,
       Authentication authentication)
   {
@@ -55,11 +55,11 @@ public class PostController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deletePost(
-      @PathVariable("id") Long personaId,
+      @PathVariable("id") Long postId,
       Authentication authentication
   ){
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-    postService.deletePost(personaId,userPrincipal.getId());
+    postService.deletePost(postId,userPrincipal.getId());
 
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)
@@ -69,12 +69,12 @@ public class PostController {
 
   @PatchMapping("/{id}")
   public ResponseEntity<PostResponse> patchPost(
-      @PathVariable("id") Long personaId,
+      @PathVariable("id") Long postId,
       @RequestBody UpdatePostRequest request,
       Authentication authentication
   ){
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-    PostResponse post = postService.patchPost(personaId,userPrincipal.getId(),request);
+    PostResponse post = postService.patchPost(postId,userPrincipal.getId(),request);
 
     return ResponseEntity
         .status(HttpStatus.OK)

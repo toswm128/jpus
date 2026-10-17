@@ -4,8 +4,6 @@ package com.minsu.jpus.post;
 import com.minsu.jpus.persona.Persona;
 import com.minsu.jpus.persona.PersonaNotFoundException;
 import com.minsu.jpus.persona.PersonaRepository;
-import com.minsu.jpus.persona.dto.PersonaResponse;
-import com.minsu.jpus.persona.dto.UpdatePersonaRequest;
 import com.minsu.jpus.post.dto.CreatePostRequest;
 import com.minsu.jpus.post.dto.PostResponse;
 import com.minsu.jpus.post.dto.UpdatePostRequest;
@@ -30,13 +28,11 @@ public class PostService {
   }
 
   public PostResponse createPost(Long userId,  CreatePostRequest request  ){
-    User user  = userRepository.findById(userId).orElseThrow(
-        ()->new UserNotFoundException("user id",userId.toString())
-    );
     Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),userId).orElseThrow(
         ()-> new PersonaNotFoundException("persona id",request.personaId().toString())
     );
 
+    User user = persona.getUser();
     return PostResponse.from(postRepository.save(new Post(user,persona,request.content() )));
   }
 
