@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,5 +57,21 @@ public class CommentController {
         .status(HttpStatus.OK)
         .body(commentService.patchComment(commentId,postId, userPrincipal.getId(),request));
   }
+
+  @DeleteMapping("/{commentId}")
+  public ResponseEntity<CommentResponse> deleteComment(
+      @PathVariable("postId") Long postId,
+      @PathVariable("commentId") Long commentId,
+      Authentication authentication
+  ){
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    commentService.deleteComment(commentId,postId, userPrincipal.getId());
+
+    return ResponseEntity
+        .status(HttpStatus.NO_CONTENT)
+        .build();
+  }
+
+
 }
 

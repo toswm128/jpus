@@ -68,4 +68,17 @@ public class CommentService {
     comment.updateComment(request);
     return CommentResponse.from(comment);
   }
+
+  @Transactional
+  public void deleteComment(
+      Long commentId,
+      Long postId,
+      Long userId
+  ){
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,postId,userId).orElseThrow(
+        ()-> new CommentNotFoundException("commentId",commentId)
+    );
+
+    comment.deleteComment();
+  }
 }

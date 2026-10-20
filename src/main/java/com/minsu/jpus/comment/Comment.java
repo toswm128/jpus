@@ -102,4 +102,7 @@ public class Comment {
     this.content=request.content();
     this.updatedAt=LocalDateTime.now();
   }
+  public void deleteComment(){
+    this.deletedAt=LocalDateTime.now();
+  }
 }
