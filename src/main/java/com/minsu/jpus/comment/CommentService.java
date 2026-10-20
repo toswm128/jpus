@@ -8,6 +8,7 @@ import com.minsu.jpus.persona.PersonaRepository;
 import com.minsu.jpus.post.Post;
 import com.minsu.jpus.post.PostNotFoundException;
 import com.minsu.jpus.post.PostRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,7 +30,7 @@ public class CommentService {
       Long userId,
       CreateCommentRequest request
   ){
-    Post post = postRepository.findById(postId).orElseThrow(
+    Post post = postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
         ()-> new PostNotFoundException("post_id",postId.toString())
     );
     Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),userId).orElseThrow(
@@ -40,5 +41,12 @@ public class CommentService {
 
     commentRepository.save(comment);
     return CommentResponse.from(comment);
+  }
+
+  public List<CommentResponse> getComments(Long postId){
+    return commentRepository.findAllByPost_IdAndDeletedAtIsNull(postId)
+        .stream()
+        .map(CommentResponse::from)
+        .toList();
   }
 }
