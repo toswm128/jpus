@@ -22,9 +22,7 @@ public class User
   private String passwordHash;
 
 
-  public Long getId() {
-    return id;
-  }
+  public Long getId() { return id; }
   public String getUsername() {
     return username;
   }

@@ -31,7 +31,7 @@ public class UserService {
 
   public UserResponse getUser(Long id){
     User user = userRepository.findById(id).orElseThrow(()->
-        new UserNotFoundException("존재하지 않는 유저입니다. id="+id)
+        new UserNotFoundException("id",id.toString())
     );
 
     return UserResponse.from(user);
@@ -40,7 +40,7 @@ public class UserService {
 
   public UserResponse getUserByUsername(String username) {
     User user = userRepository.findByUsername(username).orElseThrow(()->
-        new UserNotFoundException("존재하지 않는 유저입니다. username="+username)
+        new UserNotFoundException("username",username)
     );
     return UserResponse.from(user);
   }

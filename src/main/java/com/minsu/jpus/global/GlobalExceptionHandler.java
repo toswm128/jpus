@@ -1,5 +1,7 @@
 package com.minsu.jpus.global;
 
+import com.minsu.jpus.persona.PersonaNotFoundException;
+import com.minsu.jpus.post.PostNotFoundException;
 import com.minsu.jpus.user.UserDuplicateException;
 import com.minsu.jpus.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,20 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<String> handleUserNotFound(
       UserNotFoundException e
+  ){
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  }
+
+  @ExceptionHandler(PersonaNotFoundException.class)
+  public ResponseEntity<String> handlePersonaNotFound(
+      PersonaNotFoundException e
+  ){
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  }
+
+  @ExceptionHandler(PostNotFoundException.class)
+  public ResponseEntity<String> handlepostNotFound(
+      PostNotFoundException e
   ){
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
   }

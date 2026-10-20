@@ -23,7 +23,7 @@ public class PersonaService {
 
   public PersonaResponse createPersona(String username,CreatePersonaRequest request){
     User user = userRepository.findByUsername(username).orElseThrow(
-        ()-> new UserNotFoundException("존재하지 않는 유저입니다. username: "+username)
+        ()-> new UserNotFoundException("username",username)
     );
 
     return PersonaResponse.from(personaRepository.save(
@@ -45,7 +45,7 @@ public class PersonaService {
   ){
     Persona  persona =
     personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(personaId,userId).orElseThrow(
-        ()-> new PersonaNotFoundException("존재하지 않는 프로필입니다.")
+        ()-> new PersonaNotFoundException("persona id",personaId.toString())
         );
 
     persona.updateProfile(request.displayName(), request.bio());
@@ -59,7 +59,7 @@ public class PersonaService {
   ){
     Persona  persona =
         personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(personaId,userId).orElseThrow(
-            ()-> new PersonaNotFoundException("존재하지 않는 프로필입니다.")
+            ()-> new PersonaNotFoundException("persona id",personaId.toString())
         );
 
     persona.delete();
