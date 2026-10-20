@@ -1,5 +1,6 @@
 package com.minsu.jpus.global;
 
+import com.minsu.jpus.comment.CommentNotFoundException;
 import com.minsu.jpus.persona.PersonaNotFoundException;
 import com.minsu.jpus.post.PostNotFoundException;
 import com.minsu.jpus.user.UserDuplicateException;
@@ -28,8 +29,15 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(PostNotFoundException.class)
-  public ResponseEntity<String> handlepostNotFound(
+  public ResponseEntity<String> handlePostNotFound(
       PostNotFoundException e
+  ){
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+  }
+
+  @ExceptionHandler(CommentNotFoundException.class)
+  public ResponseEntity<String> handleCommentNotFound(
+      CommentNotFoundException e
   ){
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
   }
