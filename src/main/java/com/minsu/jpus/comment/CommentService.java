@@ -44,7 +44,10 @@ public class CommentService {
   }
 
   public List<CommentResponse> getComments(Long postId){
-    return commentRepository.findAllByPost_IdAndDeletedAtIsNull(postId)
+    commentRepository.findAllByPost_IdAndDeletedAtIsNull(postId).orElseThrow(
+        ()-> new CommentNotFoundException("post_id",postId)
+    );
+    return commentRepository.findAllByPost_IdAndDeletedAtIsNullOrderByCreatedAtAsc(postId)
         .stream()
         .map(CommentResponse::from)
         .toList();
