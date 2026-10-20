@@ -44,7 +44,9 @@ public class SecurityConfig {
             "/persona/**",
             "/auth/logout",
             "/posts",
-            "/posts/**"
+            "/posts/**",
+            "/comment",
+            "/comment/**"
         )
     );
 
