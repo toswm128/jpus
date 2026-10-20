@@ -2,12 +2,14 @@ package com.minsu.jpus.comment;
 
 import com.minsu.jpus.comment.dto.CommentResponse;
 import com.minsu.jpus.comment.dto.CreateCommentRequest;
+import com.minsu.jpus.comment.dto.UpdateCommentRequest;
 import com.minsu.jpus.persona.Persona;
 import com.minsu.jpus.persona.PersonaNotFoundException;
 import com.minsu.jpus.persona.PersonaRepository;
 import com.minsu.jpus.post.Post;
 import com.minsu.jpus.post.PostNotFoundException;
 import com.minsu.jpus.post.PostRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,5 +53,19 @@ public class CommentService {
         .stream()
         .map(CommentResponse::from)
         .toList();
+  }
+  @Transactional
+  public CommentResponse patchComment(
+      Long commentId,
+      Long postId,
+      Long userId,
+      UpdateCommentRequest request
+      ){
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,postId,userId).orElseThrow(
+        ()-> new CommentNotFoundException("commentId",commentId)
+    );
+
+    comment.updateComment(request);
+    return CommentResponse.from(comment);
   }
 }

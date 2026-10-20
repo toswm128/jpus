@@ -3,11 +3,13 @@ package com.minsu.jpus.comment;
 import com.minsu.jpus.auth.UserPrincipal;
 import com.minsu.jpus.comment.dto.CommentResponse;
 import com.minsu.jpus.comment.dto.CreateCommentRequest;
+import com.minsu.jpus.comment.dto.UpdateCommentRequest;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +42,19 @@ public class CommentController {
       @PathVariable("postId") Long postId
   ){
     return commentService.getComments(postId);
+  }
+
+  @PatchMapping("/{commentId}")
+  public ResponseEntity<CommentResponse> patchComment(
+      @PathVariable("postId") Long postId,
+      @PathVariable("commentId") Long commentId,
+      @RequestBody UpdateCommentRequest request,
+      Authentication authentication
+  ){
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(commentService.patchComment(commentId,postId, userPrincipal.getId(),request));
   }
 }
 

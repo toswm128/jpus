@@ -1,5 +1,6 @@
 package com.minsu.jpus.comment;
 
+import com.minsu.jpus.comment.dto.UpdateCommentRequest;
 import com.minsu.jpus.persona.Persona;
 import com.minsu.jpus.post.Post;
 import com.minsu.jpus.user.User;
@@ -97,4 +98,8 @@ public class Comment {
   @Column(nullable = true)
   LocalDateTime deletedAt;
 
+  public void updateComment(UpdateCommentRequest request){
+    this.content=request.content();
+    this.updatedAt=LocalDateTime.now();
+  }
 }
