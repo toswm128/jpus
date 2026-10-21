@@ -1,6 +1,5 @@
 package com.minsu.jpus.comment;
 
-import com.minsu.jpus.comment.dto.UpdateCommentRequest;
 import com.minsu.jpus.persona.Persona;
 import com.minsu.jpus.post.Post;
 import com.minsu.jpus.user.User;
@@ -15,10 +14,10 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="comment")
+@Table(name = "comment")
 public class Comment {
 
-  protected Comment(){
+  protected Comment() {
 
   }
 
@@ -72,7 +71,7 @@ public class Comment {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "post_id",nullable = false)
+  @JoinColumn(name = "post_id", nullable = false)
   private Post post;
 
   @ManyToOne
@@ -98,11 +97,12 @@ public class Comment {
   @Column(nullable = true)
   LocalDateTime deletedAt;
 
-  public void updateComment(UpdateCommentRequest request){
-    this.content=request.content();
-    this.updatedAt=LocalDateTime.now();
+  public void updateComment(String content) {
+    this.content = content;
+    this.updatedAt = LocalDateTime.now();
   }
-  public void deleteComment(){
-    this.deletedAt=LocalDateTime.now();
+
+  public void deleteComment() {
+    this.deletedAt = LocalDateTime.now();
   }
 }

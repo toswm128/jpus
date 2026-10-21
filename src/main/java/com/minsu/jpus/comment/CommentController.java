@@ -59,7 +59,7 @@ public class CommentController {
   }
 
   @DeleteMapping("/{commentId}")
-  public ResponseEntity<CommentResponse> deleteComment(
+  public ResponseEntity<Void> deleteComment(
       @PathVariable("postId") Long postId,
       @PathVariable("commentId") Long commentId,
       Authentication authentication

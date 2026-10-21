@@ -12,10 +12,10 @@ import com.minsu.jpus.post.PostRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RestController;
 
 @Service
 public class CommentService {
+
   private final CommentRepository commentRepository;
   private final PostRepository postRepository;
   private final PersonaRepository personaRepository;
@@ -31,41 +31,44 @@ public class CommentService {
       Long postId,
       Long userId,
       CreateCommentRequest request
-  ){
+  ) {
     Post post = postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
-        ()-> new PostNotFoundException("post_id",postId.toString())
+        () -> new PostNotFoundException("post_id", postId.toString())
     );
-    Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),userId).orElseThrow(
-        ()-> new PersonaNotFoundException("persona_id",request.personaId().toString())
+    Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),
+        userId).orElseThrow(
+        () -> new PersonaNotFoundException("persona_id", request.personaId().toString())
     );
 
-    Comment comment = new Comment(post,persona.getUser(),persona,request.content());
+    Comment comment = new Comment(post, persona.getUser(), persona, request.content());
 
     commentRepository.save(comment);
     return CommentResponse.from(comment);
   }
 
-  public List<CommentResponse> getComments(Long postId){
+  public List<CommentResponse> getComments(Long postId) {
     postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
-        ()-> new PostNotFoundException("post_id",postId)
+        () -> new PostNotFoundException("post_id", postId)
     );
     return commentRepository.findAllByPost_IdAndDeletedAtIsNullOrderByCreatedAtAsc(postId)
         .stream()
         .map(CommentResponse::from)
         .toList();
   }
+
   @Transactional
   public CommentResponse patchComment(
       Long commentId,
       Long postId,
       Long userId,
       UpdateCommentRequest request
-      ){
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,postId,userId).orElseThrow(
-        ()-> new CommentNotFoundException("commentId",commentId)
+  ) {
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,
+        postId, userId).orElseThrow(
+        () -> new CommentNotFoundException("commentId", commentId)
     );
 
-    comment.updateComment(request);
+    comment.updateComment(request.content());
     return CommentResponse.from(comment);
   }
 
@@ -74,9 +77,10 @@ public class CommentService {
       Long commentId,
       Long postId,
       Long userId
-  ){
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,postId,userId).orElseThrow(
-        ()-> new CommentNotFoundException("commentId",commentId)
+  ) {
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,
+        postId, userId).orElseThrow(
+        () -> new CommentNotFoundException("commentId", commentId)
     );
 
     comment.deleteComment();
