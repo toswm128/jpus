@@ -63,7 +63,7 @@ public class CommentService {
       Long userId,
       UpdateCommentRequest request
   ) {
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(commentId,
         postId, userId).orElseThrow(
         () -> new CommentNotFoundException("commentId", commentId)
     );
@@ -78,7 +78,7 @@ public class CommentService {
       Long postId,
       Long userId
   ) {
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNull(commentId,
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(commentId,
         postId, userId).orElseThrow(
         () -> new CommentNotFoundException("commentId", commentId)
     );
