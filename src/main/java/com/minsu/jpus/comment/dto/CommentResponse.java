@@ -1,9 +1,6 @@
 package com.minsu.jpus.comment.dto;
 
 import com.minsu.jpus.comment.Comment;
-import com.minsu.jpus.persona.Persona;
-import com.minsu.jpus.post.Post;
-import com.minsu.jpus.user.User;
 import java.time.LocalDateTime;
 
 public record CommentResponse(
@@ -13,18 +10,20 @@ public record CommentResponse(
     String content,
     String authorNameSnapshot,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
-
+    LocalDateTime updatedAt,
+    boolean isMine
 ) {
-    public static CommentResponse from(Comment comment){
-      return new CommentResponse(
-          comment.getId(),
-          comment.getPost().getId(),
-          comment.getPersona().getId(),
-          comment.getContent(),
-          comment.getAuthorNameSnapshot(),
-          comment.getCreatedAt(),
-          comment.getUpdatedAt()
-      );
-    }
+
+  public static CommentResponse from(Comment comment, Long currentUserId) {
+    return new CommentResponse(
+        comment.getId(),
+        comment.getPost().getId(),
+        comment.getPersona().getId(),
+        comment.getContent(),
+        comment.getAuthorNameSnapshot(),
+        comment.getCreatedAt(),
+        comment.getUpdatedAt(),
+        comment.getUser().getId().equals(currentUserId)
+    );
+  }
 }

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/posts/{postId}/comments")
 public class CommentController {
+
   private final CommentService commentService;
 
   public CommentController(CommentService commentService) {
@@ -31,7 +32,7 @@ public class CommentController {
       @RequestBody CreateCommentRequest request,
       Authentication authentication,
       @PathVariable("postId") Long postId
-  ){
+  ) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
     return ResponseEntity
         .status(HttpStatus.CREATED)
@@ -40,9 +41,11 @@ public class CommentController {
 
   @GetMapping
   public List<CommentResponse> getComments(
-      @PathVariable("postId") Long postId
-  ){
-    return commentService.getComments(postId);
+      @PathVariable("postId") Long postId,
+      Authentication authentication
+  ) {
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    return commentService.getComments(postId, userPrincipal.getId());
   }
 
   @PatchMapping("/{commentId}")
@@ -51,11 +54,11 @@ public class CommentController {
       @PathVariable("commentId") Long commentId,
       @RequestBody UpdateCommentRequest request,
       Authentication authentication
-  ){
+  ) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
     return ResponseEntity
         .status(HttpStatus.OK)
-        .body(commentService.patchComment(commentId,postId, userPrincipal.getId(),request));
+        .body(commentService.patchComment(commentId, postId, userPrincipal.getId(), request));
   }
 
   @DeleteMapping("/{commentId}")
@@ -63,9 +66,9 @@ public class CommentController {
       @PathVariable("postId") Long postId,
       @PathVariable("commentId") Long commentId,
       Authentication authentication
-  ){
+  ) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-    commentService.deleteComment(commentId,postId, userPrincipal.getId());
+    commentService.deleteComment(commentId, postId, userPrincipal.getId());
 
     return ResponseEntity
         .status(HttpStatus.NO_CONTENT)

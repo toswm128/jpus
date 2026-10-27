@@ -43,16 +43,16 @@ public class CommentService {
     Comment comment = new Comment(post, persona.getUser(), persona, request.content());
 
     commentRepository.save(comment);
-    return CommentResponse.from(comment);
+    return CommentResponse.from(comment, userId);
   }
 
-  public List<CommentResponse> getComments(Long postId) {
+  public List<CommentResponse> getComments(Long postId, Long userId) {
     postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
         () -> new PostNotFoundException("post_id", postId)
     );
     return commentRepository.findAllByPost_IdAndDeletedAtIsNullOrderByCreatedAtAsc(postId)
         .stream()
-        .map(CommentResponse::from)
+        .map(comment -> CommentResponse.from(comment, userId))
         .toList();
   }
 
@@ -63,13 +63,14 @@ public class CommentService {
       Long userId,
       UpdateCommentRequest request
   ) {
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(commentId,
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(
+        commentId,
         postId, userId).orElseThrow(
         () -> new CommentNotFoundException("commentId", commentId)
     );
 
     comment.updateComment(request.content());
-    return CommentResponse.from(comment);
+    return CommentResponse.from(comment, userId);
   }
 
   @Transactional
@@ -78,7 +79,8 @@ public class CommentService {
       Long postId,
       Long userId
   ) {
-    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(commentId,
+    Comment comment = commentRepository.findByIdAndPost_IdAndUser_IdAndDeletedAtIsNullAndPost_DeletedAtIsNull(
+        commentId,
         postId, userId).orElseThrow(
         () -> new CommentNotFoundException("commentId", commentId)
     );
