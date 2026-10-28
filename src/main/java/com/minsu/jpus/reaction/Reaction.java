@@ -10,10 +10,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reaction")
+@Table(name = "reaction",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_reaction_user_post",
+        columnNames = {"user_id", "post_id"}
+    ))
 public class Reaction {
 
   protected Reaction() {
@@ -54,7 +59,7 @@ public class Reaction {
   @JoinColumn(name = "post_id", nullable = false)
   Post post;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false)
   LocalDateTime createdAt;
 
 
