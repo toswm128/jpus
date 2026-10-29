@@ -35,7 +35,8 @@ public class PostService {
     );
 
     User user = persona.getUser();
-    return PostResponse.from(postRepository.save(new Post(user, persona, request.content())));
+    return PostResponse.from(
+        postRepository.save(new Post(user, persona, request.title(), request.content())));
   }
 
   public Page<PostResponse> getPosts(
@@ -77,7 +78,7 @@ public class PostService {
             () -> new PostNotFoundException("post id", postId.toString())
         );
 
-    post.updateContent(request.content());
+    post.updateContent(request.title(), request.content());
     return PostResponse.from(post);
   }
 }

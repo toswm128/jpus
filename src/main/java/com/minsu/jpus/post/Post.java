@@ -10,18 +10,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 @Entity
-@Table(name="post")
+@Table(name = "post")
 public class Post {
 
-  public Post(User user, Persona persona,String content) {
+  public Post(User user, Persona persona, String title, String content) {
     this.user = user;
     this.persona = persona;
     this.authorNameSnapshot = persona.getDisplayName();
+    this.title = title;
     this.content = content;
     this.createdAt = LocalDateTime.now();
   }
@@ -43,6 +42,10 @@ public class Post {
 
   public String getAuthorNameSnapshot() {
     return authorNameSnapshot;
+  }
+
+  public String getTitle() {
+    return title;
   }
 
   public String getContent() {
@@ -75,6 +78,9 @@ public class Post {
   @Column(nullable = false)
   String authorNameSnapshot;
 
+  @Column(length = 100, nullable = true)
+  String title;
+
   @Column(nullable = false)
   String content;
 
@@ -87,10 +93,12 @@ public class Post {
   @Column(nullable = true)
   LocalDateTime deletedAt;
 
-  public void delete(){
+  public void delete() {
     this.deletedAt = LocalDateTime.now();
   }
-  public void updateContent(String content){
+
+  public void updateContent(String title, String content) {
+    this.title = title;
     this.content = content;
     this.updatedAt = LocalDateTime.now();
   }

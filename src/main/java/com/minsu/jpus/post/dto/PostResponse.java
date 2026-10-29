@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public record PostResponse(
     Long id,
+    String title,
     String content,
     Long personaId,
     String authorNameSnapshot,
@@ -13,9 +14,10 @@ public record PostResponse(
 ) {
 
 
-  public static PostResponse from(Post post){
+  public static PostResponse from(Post post) {
     return new PostResponse(
         post.getId(),
+        post.getTitle(),
         post.getContent(),
         post.getPersona().getId(),
         post.getAuthorNameSnapshot(),
