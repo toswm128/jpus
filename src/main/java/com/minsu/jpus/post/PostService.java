@@ -8,14 +8,15 @@ import com.minsu.jpus.post.dto.CreatePostRequest;
 import com.minsu.jpus.post.dto.PostResponse;
 import com.minsu.jpus.post.dto.UpdatePostRequest;
 import com.minsu.jpus.user.User;
-import com.minsu.jpus.user.UserNotFoundException;
 import com.minsu.jpus.user.UserRepository;
 import jakarta.transaction.Transactional;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PostService {
+
   private final PostRepository postRepository;
   private final PersonaRepository personaRepository;
   private final UserRepository userRepository;
@@ -27,36 +28,40 @@ public class PostService {
     this.userRepository = userRepository;
   }
 
-  public PostResponse createPost(Long userId,  CreatePostRequest request  ){
-    Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),userId).orElseThrow(
-        ()-> new PersonaNotFoundException("persona id",request.personaId().toString())
+  public PostResponse createPost(Long userId, CreatePostRequest request) {
+    Persona persona = personaRepository.findByIdAndUser_IdAndDeletedAtIsNull(request.personaId(),
+        userId).orElseThrow(
+        () -> new PersonaNotFoundException("persona id", request.personaId().toString())
     );
 
     User user = persona.getUser();
-    return PostResponse.from(postRepository.save(new Post(user,persona,request.content() )));
+    return PostResponse.from(postRepository.save(new Post(user, persona, request.content())));
   }
 
-  public List<PostResponse> getPosts(){
-    List<PostResponse> posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
-        .stream()
-        .map(PostResponse::from)
-        .toList();
+  public Page<PostResponse> getPosts(
+      int page,
+      int size
+  ) {
+    PageRequest pageable = PageRequest.of(page, size);
+    Page<PostResponse> posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDescIdDesc(
+            pageable)
+        .map(PostResponse::from);
 
     return posts;
   }
 
-  public PostResponse getPost(Long postId){
+  public PostResponse getPost(Long postId) {
     Post post = postRepository.findByIdAndDeletedAtIsNull(postId).orElseThrow(
-        () -> new PostNotFoundException("post id",postId.toString())
+        () -> new PostNotFoundException("post id", postId.toString())
     );
 
     return PostResponse.from(post);
   }
 
   @Transactional
-  public void deletePost(Long postId,Long userId){
-    Post post = postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId,userId)
-        .orElseThrow(()->new PostNotFoundException("post id",postId.toString()));
+  public void deletePost(Long postId, Long userId) {
+    Post post = postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId, userId)
+        .orElseThrow(() -> new PostNotFoundException("post id", postId.toString()));
 
     post.delete();
   }
