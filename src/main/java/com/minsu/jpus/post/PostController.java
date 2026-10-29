@@ -3,6 +3,7 @@ package com.minsu.jpus.post;
 import com.minsu.jpus.auth.UserPrincipal;
 import com.minsu.jpus.post.dto.CreatePostRequest;
 import com.minsu.jpus.post.dto.PostResponse;
+import com.minsu.jpus.post.dto.PostSummaryResponse;
 import com.minsu.jpus.post.dto.UpdatePostRequest;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
@@ -43,9 +44,10 @@ public class PostController {
   }
 
   @GetMapping
-  public PagedModel<PostResponse> getPosts(
+  public PagedModel<PostSummaryResponse> getPosts(
       @RequestParam(name = "page", defaultValue = "0") int page,
-      @RequestParam(name = "size", defaultValue = "20") int size
+      @RequestParam(name = "size", defaultValue = "20") int size,
+      Authentication authentication
   ) {
     if (page < 0 || size < 1 || size > 100) {
       throw new ResponseStatusException(
@@ -53,15 +55,20 @@ public class PostController {
           "page는 0 이상, size는 1~100이어야 합니다."
       );
     }
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-    return new PagedModel<>(postService.getPosts(page, size));
+    return new PagedModel<>(postService.getPosts(page, size, userPrincipal.getId()));
 
   }
 
   @GetMapping("/{id}")
-  public PostResponse getPost(@PathVariable("id") Long postId) {
+  public PostSummaryResponse getPost(
+      @PathVariable("id") Long postId,
+      Authentication authentication
+  ) {
 
-    return postService.getPost(postId);
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    return postService.getPost(postId, userPrincipal.getId());
   }
 
   @DeleteMapping("/{id}")
