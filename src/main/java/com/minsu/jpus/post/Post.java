@@ -52,6 +52,10 @@ public class Post {
     return content;
   }
 
+  public String getContentJson() {
+    return contentJson;
+  }
+
   public LocalDateTime getCreatedAt() {
     return createdAt;
   }
@@ -81,8 +85,11 @@ public class Post {
   @Column(length = 100, nullable = true)
   String title;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "LONGTEXT")
   String content;
+
+  @Column(columnDefinition = "LONGTEXT")
+  String contentJson;
 
   @Column(nullable = false)
   LocalDateTime createdAt;
@@ -101,5 +108,10 @@ public class Post {
     this.title = title;
     this.content = content;
     this.updatedAt = LocalDateTime.now();
+  }
+
+  public void initializeRichContent(String content, String contentJson) {
+    this.content = content;
+    this.contentJson = contentJson;
   }
 }
