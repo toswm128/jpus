@@ -114,4 +114,15 @@ public class Post {
     this.content = content;
     this.contentJson = contentJson;
   }
+
+  public void updateRichContent(
+      String title,
+      String content,
+      String contentJson
+  ) {
+    this.title = title;
+    this.content = content;
+    this.contentJson = contentJson;
+    this.updatedAt = LocalDateTime.now();
+  }
 }

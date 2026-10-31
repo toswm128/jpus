@@ -41,8 +41,10 @@ public class RichPostContent {
   public record ValidatedContent(
       ObjectNode document,
       List<String> imageClientIds,
-      String plainText
+      String plainText,
+      Set<Long> existingImageIds
   ) {
+
   }
 
   public ValidatedContent validate(JsonNode document, List<String> imageClientIds) {
@@ -63,7 +65,7 @@ public class RichPostContent {
       throw invalid("본문 문서는 256KiB 이하여야 합니다.");
     }
 
-    ValidationState state = new ValidationState();
+    ValidationState state = new ValidationState(false);
     ObjectNode normalized = normalize(document, null, 0, state, 0);
     if (!state.imageIds.equals(expectedIds)) {
       throw invalid("본문 이미지 참조와 첨부 파일 목록이 일치하지 않습니다.");
@@ -75,7 +77,50 @@ public class RichPostContent {
     if (plainText.isBlank() && expectedIds.isEmpty()) {
       throw invalid("본문이나 이미지를 입력해 주세요.");
     }
-    return new ValidatedContent(normalized, List.copyOf(ids), plainText);
+    return new ValidatedContent(normalized, List.copyOf(ids), plainText,
+        Set.copyOf(state.existingImageIds));
+  }
+
+  public ValidatedContent validateForUpdate(JsonNode document, List<String> imageClientIds) {
+    List<String> ids = imageClientIds == null ? List.of() : imageClientIds;
+
+    if (ids.size() > MAX_IMAGES) {
+      throw invalid("이미지는 최대 5개까지 첨부할 수 있습니다.");
+    }
+    Set<String> expectedIds = new LinkedHashSet<>();
+    for (String id : ids) {
+      if (id == null || !CLIENT_ID.matcher(id).matches() || !expectedIds.add(id)) {
+        throw invalid("이미지 식별자가 잘못되었거나 중복되었습니다.");
+      }
+    }
+    if (document == null || !document.isObject()) {
+      throw invalid("본문은 doc 형식의 JSON 객체여야 합니다.");
+    }
+    if (mapper.writeValueAsBytes(document).length > MAX_DOCUMENT_BYTES) {
+      throw invalid("본문 문서는 256KiB 이하여야 합니다.");
+    }
+
+    ValidationState state = new ValidationState(true);
+    ObjectNode normalized = normalize(document, null, 0, state, 0);
+
+    int imageCount = state.imageIds.size() + state.existingImageIds.size();
+
+    if (imageCount > MAX_IMAGES) {
+      throw invalid("이미지는 최대 5개까지 첨부할 수 있습니다.");
+    }
+    if (!state.imageIds.equals(expectedIds)) {
+      throw invalid("본문 이미지 참조와 첨부 파일 목록이 일치하지 않습니다.");
+    }
+    String plainText = state.plainText.toString().strip();
+    if (plainText.length() > MAX_TEXT_LENGTH) {
+      throw invalid("본문은 20,000자 이하여야 합니다.");
+    }
+    if (plainText.isBlank() && imageCount == 0) {
+      throw invalid("본문이나 이미지를 입력해 주세요.");
+    }
+    return new ValidatedContent(normalized, List.copyOf(ids), plainText,
+        Set.copyOf(state.existingImageIds)
+    );
   }
 
   public String attachImages(ValidatedContent content, Map<String, Long> imageIds) {
@@ -158,7 +203,9 @@ public class RichPostContent {
   }
 
   private boolean allowedChild(String parent, String type, int index) {
-    if (parent == null) return type.equals("doc");
+    if (parent == null) {
+      return type.equals("doc");
+    }
     return switch (parent) {
       case "doc", "blockquote" -> BLOCK_NODES.contains(type);
       case "bulletList", "orderedList" -> type.equals("listItem");
@@ -176,17 +223,56 @@ public class RichPostContent {
       ValidationState state
   ) {
     if (type.equals("image")) {
-      if (attrs == null || !attrs.isObject()) throw invalid("이미지 참조가 없습니다.");
-      requireKeys(attrs, Set.of("clientId", "alt", "title"));
-      String clientId = requiredString(attrs, "clientId");
-      if (!CLIENT_ID.matcher(clientId).matches()) throw invalid("이미지 식별자가 잘못되었습니다.");
-      state.imageIds.add(clientId);
+      if (attrs == null || !attrs.isObject()) {
+        throw invalid("이미지 참조가 없습니다.");
+      }
+
+      if (state.allowExistingImages) {
+        requireKeys(attrs, Set.of("clientId", "alt", "title", "imageId"));
+      } else {
+        requireKeys(attrs, Set.of("clientId", "alt", "title"));
+      }
+      boolean hasImageId = attrs.has("imageId");
+      boolean hasClientId = attrs.has("clientId");
+
+      // 둘 다 있거나 둘 다 없으면 거절한다.
+      if (hasImageId == hasClientId) {
+        throw invalid("imageId와 clientId 중 하나만 있어야 합니다.");
+      }
+
       ObjectNode target = normalized.putObject("attrs");
-      target.put("clientId", clientId);
+
+      if (hasImageId) {
+        // 기존 사진: DB ID를 검사하고 그대로 보존한다.
+        JsonNode imageId = attrs.get("imageId");
+
+        if (!imageId.isIntegralNumber()
+            || !imageId.canConvertToLong()
+            || imageId.longValue() < 1) {
+          throw invalid("이미지 ID가 올바르지 않습니다.");
+        }
+
+        long id = imageId.longValue();
+        state.existingImageIds.add(id);
+        target.put("imageId", id);
+      } else {
+        // 새 사진: 임시 ID를 검사하고 보존한다.
+        String clientId = requiredString(attrs, "clientId");
+
+        if (!CLIENT_ID.matcher(clientId).matches()) {
+          throw invalid("이미지 식별자가 잘못되었습니다.");
+        }
+
+        state.imageIds.add(clientId);
+        target.put("clientId", clientId);
+      }
+
       copyOptionalString(attrs, target, "alt", 500);
       copyOptionalString(attrs, target, "title", 500);
     } else if (type.equals("heading")) {
-      if (attrs == null || !attrs.isObject()) throw invalid("제목 단계가 없습니다.");
+      if (attrs == null || !attrs.isObject()) {
+        throw invalid("제목 단계가 없습니다.");
+      }
       requireKeys(attrs, Set.of("level"));
       JsonNode level = attrs.get("level");
       if (level == null || !level.isIntegralNumber() || !level.canConvertToInt()
@@ -207,7 +293,9 @@ public class RichPostContent {
             && (!listType.isString() || !listType.stringValue().equals("1"))) {
           throw invalid("숫자 목록만 사용할 수 있습니다.");
         }
-        if (start != null) normalized.putObject("attrs").put("start", start.intValue());
+        if (start != null) {
+          normalized.putObject("attrs").put("start", start.intValue());
+        }
       }
     } else if (type.equals("codeBlock")) {
       if (attrs != null && !attrs.isNull()) {
@@ -227,16 +315,22 @@ public class RichPostContent {
       ObjectNode normalized
   ) {
     JsonNode marks = node.get("marks");
-    if (marks == null) return;
+    if (marks == null) {
+      return;
+    }
     if (!marks.isArray() || (!type.equals("text") && !type.equals("hardBreak"))
         || "codeBlock".equals(parent)) {
       throw invalid("텍스트 서식이 올바르지 않습니다.");
     }
-    if (marks.isEmpty()) return;
+    if (marks.isEmpty()) {
+      return;
+    }
     Set<String> used = new HashSet<>();
     ArrayNode target = normalized.putArray("marks");
     for (JsonNode mark : marks) {
-      if (!mark.isObject()) throw invalid("텍스트 서식이 올바르지 않습니다.");
+      if (!mark.isObject()) {
+        throw invalid("텍스트 서식이 올바르지 않습니다.");
+      }
       requireKeys(mark, Set.of("type"));
       String markType = requiredString(mark, "type");
       if (!MARKS.contains(markType) || !used.add(markType)) {
@@ -252,14 +346,23 @@ public class RichPostContent {
   private void replaceImageReferences(JsonNode node, Map<String, Long> imageIds) {
     if ("image".equals(node.path("type").asString(""))) {
       ObjectNode attrs = (ObjectNode) node.get("attrs");
-      Long id = imageIds.get(attrs.get("clientId").stringValue());
-      if (id == null || id < 1) throw new IllegalStateException("저장된 이미지 ID가 없습니다.");
+      Long id;
+      if (attrs.hasNonNull("imageId")) {
+        id = attrs.get("imageId").longValue();
+      } else {
+        id = imageIds.get(attrs.get("clientId").stringValue());
+      }
+      if (id == null || id < 1) {
+        throw new IllegalStateException("저장된 이미지 ID가 없습니다.");
+      }
       attrs.remove("clientId");
       attrs.put("imageId", id);
     }
     JsonNode children = node.get("content");
     if (children != null) {
-      for (JsonNode child : children) replaceImageReferences(child, imageIds);
+      for (JsonNode child : children) {
+        replaceImageReferences(child, imageIds);
+      }
     }
   }
 
@@ -279,25 +382,33 @@ public class RichPostContent {
     }
     JsonNode children = node.get("content");
     if (children != null && children.isArray()) {
-      for (JsonNode child : children) addImageUrls(child, postId, imageIds);
+      for (JsonNode child : children) {
+        addImageUrls(child, postId, imageIds);
+      }
     }
   }
 
   private void requireKeys(JsonNode node, Set<String> allowed) {
     for (String key : node.propertyNames()) {
-      if (!allowed.contains(key)) throw invalid("지원하지 않는 본문 속성입니다: " + key);
+      if (!allowed.contains(key)) {
+        throw invalid("지원하지 않는 본문 속성입니다: " + key);
+      }
     }
   }
 
   private String requiredString(JsonNode node, String key) {
     JsonNode value = node.get(key);
-    if (value == null || !value.isString()) throw invalid(key + "는 문자열이어야 합니다.");
+    if (value == null || !value.isString()) {
+      throw invalid(key + "는 문자열이어야 합니다.");
+    }
     return value.stringValue();
   }
 
   private void copyOptionalString(JsonNode source, ObjectNode target, String key, int maxLength) {
     JsonNode value = source.get(key);
-    if (value == null || value.isNull()) return;
+    if (value == null || value.isNull()) {
+      return;
+    }
     if (!value.isString() || value.stringValue().length() > maxLength) {
       throw invalid(key + " 속성의 형식이나 길이가 올바르지 않습니다.");
     }
@@ -308,13 +419,49 @@ public class RichPostContent {
     state.plainText.append(value);
   }
 
+  public List<Long> imageIdsInOrder(String storedDocument) {
+    JsonNode document = mapper.readTree(storedDocument);
+
+    Set<Long> orderedIds = new LinkedHashSet<>();
+    collectImageIds(document, orderedIds);
+
+    return List.copyOf(orderedIds);
+  }
+
+  private void collectImageIds(JsonNode node, Set<Long> orderedIds) {
+    // 지금 보고 있는 노드가 이미지면 ID를 기록한다.
+    if ("image".equals(node.path("type").asString(""))) {
+      long imageId = node.get("attrs")
+          .get("imageId")
+          .longValue();
+
+      orderedIds.add(imageId);
+    }
+
+    // 자식 배열을 앞에서부터 방문한다.
+    JsonNode children = node.get("content");
+
+    if (children != null && children.isArray()) {
+      for (JsonNode child : children) {
+        collectImageIds(child, orderedIds);
+      }
+    }
+  }
+
   private static ResponseStatusException invalid(String message) {
     return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
   }
 
   private static class ValidationState {
+
+    private final Set<Long> existingImageIds = new LinkedHashSet<>();
+    private final boolean allowExistingImages;
     private int nodeCount;
     private final StringBuilder plainText = new StringBuilder();
     private final Set<String> imageIds = new LinkedHashSet<>();
+
+    public ValidationState(boolean allowExistingImages) {
+      this.allowExistingImages = allowExistingImages;
+    }
   }
 }

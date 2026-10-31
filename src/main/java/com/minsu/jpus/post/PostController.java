@@ -7,11 +7,12 @@ import com.minsu.jpus.post.dto.PostDetailResponse;
 import com.minsu.jpus.post.dto.PostResponse;
 import com.minsu.jpus.post.dto.PostSummaryResponse;
 import com.minsu.jpus.post.dto.UpdatePostRequest;
+import com.minsu.jpus.post.dto.UpdateRichPostRequest;
 import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.data.web.PagedModel;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,8 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/posts")
@@ -117,7 +118,7 @@ public class PostController {
 
   }
 
-  @PatchMapping("/{id}")
+  @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<PostResponse> patchPost(
       @PathVariable("id") Long postId,
       @RequestBody UpdatePostRequest request,
@@ -130,5 +131,17 @@ public class PostController {
         .status(HttpStatus.OK)
         .body(post);
 
+  }
+
+  @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<PostResponse> patchRichPost(
+      @RequestPart("post") UpdateRichPostRequest request,
+      @RequestPart(value = "images", required = false) List<MultipartFile> images,
+      @PathVariable("id") Long postId,
+      Authentication authentication
+  ) {
+    UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(postService.patchRichPost(postId, userPrincipal.getId(), request, images));
   }
 }

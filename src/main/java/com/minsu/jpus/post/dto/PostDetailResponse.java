@@ -16,13 +16,15 @@ public record PostDetailResponse(
     Long reactionCount,
     Boolean reactedByMe,
     JsonNode contentJson,
-    List<PostImageResponse> images
+    List<PostImageResponse> images,
+    boolean isMine
 ) {
 
   public static PostDetailResponse from(
       PostSummaryResponse summary,
       JsonNode contentJson,
-      List<PostImageResponse> images
+      List<PostImageResponse> images,
+      boolean isMine
   ) {
     return new PostDetailResponse(
         summary.id(),
@@ -36,7 +38,8 @@ public record PostDetailResponse(
         summary.reactionCount(),
         summary.reactedByMe(),
         contentJson,
-        List.copyOf(images)
+        List.copyOf(images),
+        isMine
     );
   }
 }

@@ -66,5 +66,9 @@ public class PostImage {
     this.sortOrder = sortOrder;
   }
 
+  public void updateSortOrder(int sortOrder) {
+    this.sortOrder = sortOrder;
+  }
+
 }
 

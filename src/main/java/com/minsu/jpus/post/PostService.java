@@ -13,6 +13,7 @@ import com.minsu.jpus.post.dto.PostImageResponse;
 import com.minsu.jpus.post.dto.PostResponse;
 import com.minsu.jpus.post.dto.PostSummaryResponse;
 import com.minsu.jpus.post.dto.UpdatePostRequest;
+import com.minsu.jpus.post.dto.UpdateRichPostRequest;
 import com.minsu.jpus.reaction.ReactionRepository;
 import com.minsu.jpus.reaction.dto.ReactionCountProjection;
 import com.minsu.jpus.storage.LocalImageStorage;
@@ -208,11 +209,13 @@ public class PostService {
         .map(PostImageResponse::id)
         .collect(Collectors.toSet());
     return PostDetailResponse.from(
-        summary, richPostContent.forResponse(post.getContentJson(), postId, imageIds), images
+        summary, richPostContent.forResponse(post.getContentJson(), postId, imageIds), images,
+        post.getUser().getId().equals(userId)
     );
   }
 
   public record ImageContent(Resource resource, String contentType) {
+
   }
 
   @Transactional(readOnly = true)
@@ -227,7 +230,9 @@ public class PostService {
       }
       return new ImageContent(resource, image.getContentType());
     } catch (Exception failure) {
-      if (failure instanceof RuntimeException runtime) throw runtime;
+      if (failure instanceof RuntimeException runtime) {
+        throw runtime;
+      }
       throw new IllegalStateException("이미지를 읽지 못했습니다.", failure);
     }
   }
@@ -259,7 +264,113 @@ public class PostService {
     validateTitle(request.title());
     validatePlainContent(request.content());
     post.updateContent(request.title(), request.content());
+
     return PostResponse.from(post);
+  }
+
+  public PostResponse patchRichPost(
+      Long postId,
+      Long userId,
+      UpdateRichPostRequest request,
+      List<MultipartFile> images
+  ) {
+    validateTitle(request.title());
+    RichPostContent.ValidatedContent content =
+        richPostContent.validateForUpdate(request.contentJson(), request.imageClientIds());
+    List<MultipartFile> files = images == null ? List.of() : images;
+    validateFiles(files, content.imageClientIds().size());
+
+    List<StoredUpload> uploaded = new ArrayList<>();
+    List<String> deletedImageStorageKeys = new ArrayList<>();
+    PostResponse result;
+    try {
+
+      for (int i = 0; i < files.size(); i++) {
+        var stored = imageStorage.save(files.get(i));
+        uploaded.add(new StoredUpload(
+            content.imageClientIds().get(i), stored.storageKey(), stored.contentType()
+        ));
+      }
+
+      result = createTransaction.execute(status -> {
+        Post post = postRepository.findByIdAndUser_IdAndDeletedAtIsNull(postId, userId).orElseThrow(
+            () -> new PostNotFoundException("post_id", postId)
+        );
+        List<PostImage> postImages = postImageRepository.findAllByPost_IdOrderBySortOrderAscIdAsc(
+            postId);
+
+        Set<Long> savedImageIds = postImages.stream()
+            .map(PostImage::getId)
+            .collect(Collectors.toSet());
+
+        if (!savedImageIds.containsAll(content.existingImageIds())) {
+          throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "이 게시글에 속하지 않는 이미지가 포함되어 있습니다."
+          );
+        }
+        List<PostImage> removedImages = postImages.stream()
+            .filter(image -> !content.existingImageIds().contains(image.getId()))
+            .toList();
+        deletedImageStorageKeys.addAll(
+            removedImages.stream().map(PostImage::getStorageKey).toList());
+
+        postImageRepository.deleteAll(removedImages);
+
+        Map<String, Long> imageIds = new HashMap<>();
+        for (int i = 0; i < uploaded.size(); i++) {
+          StoredUpload upload = uploaded.get(i);
+          PostImage image = postImageRepository.save(new PostImage(
+              post, upload.storageKey(), upload.contentType(), i
+          ));
+          postImages.add(image);
+          imageIds.put(upload.clientId(), image.getId());
+        }
+
+        post.updateRichContent(request.title(), content.plainText(),
+            richPostContent.attachImages(content, imageIds));
+
+        List<Long> orderedIds = richPostContent.imageIdsInOrder(post.getContentJson());
+        for (int i = 0; i < orderedIds.size(); i++) {
+          Long imageId = orderedIds.get(i);
+          for (PostImage image : postImages) {
+            if (image.getId().equals(imageId)) {
+              image.updateSortOrder(i);
+              break;
+            }
+          }
+        }
+
+        return PostResponse.from(post);
+      });
+    } catch (Exception failure) {
+      RuntimeException problem = failure instanceof RuntimeException runtime
+          ? runtime : new IllegalStateException("이미지를 저장하지 못했습니다.", failure);
+      for (StoredUpload upload : uploaded) {
+        try {
+          imageStorage.delete(upload.storageKey());
+        } catch (Exception cleanupFailure) {
+          problem.addSuppressed(cleanupFailure);
+          logger.warn("Failed to clean up uncommitted post image {}", upload.storageKey(),
+              cleanupFailure);
+        }
+      }
+      throw problem;
+    }
+
+    for (String key : deletedImageStorageKeys) {
+      try {
+        imageStorage.delete(key);
+      } catch (Exception cleanupFailure) {
+        logger.warn(
+            "Failed to delete removed post image {}",
+            key,
+            cleanupFailure
+        );
+      }
+    }
+
+    return result;
   }
 
   private Persona ownedPersona(Long personaId, Long userId) {
@@ -279,7 +390,8 @@ public class PostService {
   }
 
   private void validatePlainContent(String content) {
-    if (content == null || content.isBlank() || content.length() > RichPostContent.MAX_TEXT_LENGTH) {
+    if (content == null || content.isBlank()
+        || content.length() > RichPostContent.MAX_TEXT_LENGTH) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "본문을 입력해 주세요. 본문은 20,000자 이하여야 합니다."
       );
@@ -303,5 +415,6 @@ public class PostService {
   }
 
   private record StoredUpload(String clientId, String storageKey, String contentType) {
+
   }
 }
